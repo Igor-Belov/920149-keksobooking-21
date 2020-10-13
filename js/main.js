@@ -12,9 +12,6 @@ const SRC_FOTO = [
 const WORDS = [`Nulla`, `blandit`, `auctor`, `elit`, `eget`, `pharetra`, `felis`, `Fusce`];
 
 const QUANITY_NEAR_OBJECT = 8;
-let avatarAdress = [];
-let mapX = 0;
-let mapY = 0;
 const map = document.querySelector(`.map`);
 const markTemplate = document.querySelector(`#pin`).content.querySelector(`.map__pin`);
 const mapPins = map.querySelector(`.map__pins`);
@@ -31,16 +28,16 @@ const shuffle = function (arr) {
   return arr;
 };
 
-const getAvatarAdress = function (QuantityNearObject) {
-  for (let i = 0; i < QuantityNearObject; i++) {
-    avatarAdress[i] = i + 1;
+const getAvatarAdress = function (quantityNearObject) {
+  let avatarAdress = [];
+  for (let i = 0; i < quantityNearObject; i++) {
+    avatarAdress.push(i + 1);
   }
-  avatarAdress = shuffle(avatarAdress);
-  return avatarAdress;
+  return shuffle(avatarAdress);
 };
 
 const getArrayRandElement = function (arr) {
-  let randomNumber = Math.floor(Math.random() * arr.length);
+  let randomNumber = getRandomNumber(arr.length);
   return arr[randomNumber];
 };
 
@@ -52,94 +49,91 @@ const getRandomNumber = function (max, min = 0) {
   return `Ошибка. Установите максимальное число для генератора, и, опционально, минимальное число`;
 };
 
-const adress = function () {
+const getRandomAddress = function () {
   const widthmapX = map.offsetWidth;
   const minmapY = 130;
   const maxmapY = 630;
-  mapX = getRandomNumber(widthmapX);
-  mapY = getRandomNumber(maxmapY, minmapY);
+  const mapX = getRandomNumber(widthmapX);
+  const mapY = getRandomNumber(maxmapY, minmapY);
+  return {x: mapX, y: mapY};
 };
 
-const getRandomArrayGenerator = function (arr) {
-  let j = 0;
+const getRandomSubArray = function (arr) {
   let newArr = [];
   for (let i = 0; i < arr.length; i++) {
     if (Math.random() > 0.5) {
-      newArr[j] = arr[i];
-      j++;
+      newArr.push(arr[i]);
     }
   }
   return newArr;
 };
 
-const generationNearObject = function (i) {
+const generationNearObject = function (avatarAdress, coordinateX, coordinateY) {
   const NearObject = {
     author: {
-      avatar: `img/avatars/user0${avatarAdress[i]}.png`
+      avatar: `img/avatars/user0${avatarAdress}.png`
     },
     offer: {
       title: getArrayRandElement(WORDS),
-      address: `${mapX}, ${mapY}`,
+      address: `${coordinateX}, ${coordinateY}`,
       price: getRandomNumber(10000, 1000),
       type: getArrayRandElement(TYPE_OFFER),
       rooms: getRandomNumber(10, 1),
       guests: getRandomNumber(12, 1),
       checkin: getArrayRandElement(CHECKIN),
       checkout: getArrayRandElement(CHECKOUT),
-      features: getRandomArrayGenerator(FEATURES),
+      features: getRandomSubArray(FEATURES),
       description: getArrayRandElement(WORDS),
-      photos: getRandomArrayGenerator(SRC_FOTO),
+      photos: getRandomSubArray(SRC_FOTO),
     },
     location: {
-      x: mapX,
-      y: mapY
+      x: coordinateX,
+      y: coordinateY
     }
   };
   return NearObject;
 };
 
-const getNearObjects = function (QuantityNearObject) {
-  avatarAdress = getAvatarAdress(QuantityNearObject);
+const getNearObjects = function (quantityNearObject) {
+  const avatarAdress = getAvatarAdress(quantityNearObject);
   let nearObjectsElements = [];
-  for (let i = 0; i < QuantityNearObject; i++) {
-    adress();
-    nearObjectsElements[i] = generationNearObject(i);
+  for (let i = 0; i < quantityNearObject; i++) {
+    const coordinate = getRandomAddress();
+    nearObjectsElements.push(generationNearObject(avatarAdress[i], coordinate.x, coordinate.y));
   }
   return nearObjectsElements;
 };
 
-map.classList.remove(`map--faded`);
-const nearObjects = getNearObjects(QUANITY_NEAR_OBJECT);
-
-const getRulerMark = function () {
+const getRulerMarkSize = function () {
   let rulerObject = document.createElement(`div`);
   rulerObject.classList.add(`map__pin`);
   mapPins.appendChild(rulerObject);
   let widthMark = rulerObject.clientWidth;
   let heightMark = rulerObject.clientHeight;
   mapPins.removeChild(rulerObject);
-  return [widthMark, heightMark];
+  return {width: widthMark, height: heightMark};
 };
-const sizesMark = getRulerMark();
 
-const getGenerationMark = function (numberObject) {
+const getGenerationMark = function (nearObject, MarkWidth, MarkHeight) {
   let newMark = markTemplate.cloneNode(true);
   let newMarkImg = newMark.querySelector(`img`);
-  let widthMark = sizesMark[0];
-  let heightMark = sizesMark[1];
-  newMark.style.left = `${nearObjects[numberObject].location.x - widthMark / 2}px`;
-  newMark.style.top = `${nearObjects[numberObject].location.y - heightMark}px`;
-  newMarkImg.src = `${nearObjects[numberObject].author.avatar}`;
-  newMarkImg.alt = `${nearObjects[numberObject].offer.title}`;
+  newMark.style.left = `${nearObject.location.x - MarkWidth / 2}px`;
+  newMark.style.top = `${nearObject.location.y - MarkHeight}px`;
+  newMarkImg.src = `${nearObject.author.avatar}`;
+  newMarkImg.alt = `${nearObject.offer.title}`;
   return newMark;
 };
 
-const createDOM = function (QuantityNearObject) {
+const createDOM = function (quantityNearObject) {
+  const sizesMark = getRulerMarkSize();
+  const nearObjects = getNearObjects(quantityNearObject);
   const fragment = document.createDocumentFragment();
-  for (let i = 0; i < QuantityNearObject; i++) {
-    fragment.appendChild(getGenerationMark(i));
+  for (let i = 0; i < quantityNearObject; i++) {
+    fragment.appendChild(getGenerationMark(nearObjects[i], sizesMark.width, sizesMark.height));
   }
   mapPins.appendChild(fragment);
 };
 
+map.classList.remove(`map--faded`);
 createDOM(QUANITY_NEAR_OBJECT);
+
