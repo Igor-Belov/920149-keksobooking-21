@@ -28,12 +28,9 @@ const shuffle = function (arr) {
   return arr;
 };
 
-const getAvatarAdress = function (quantityNearObject) {
-  let avatarAdress = [];
-  for (let i = 0; i < quantityNearObject; i++) {
-    avatarAdress.push(i + 1);
-  }
-  return shuffle(avatarAdress);
+const getAvatarAdresses = function (quantityNearObject) {
+  let avatarAdresses = [...(new Array(quantityNearObject)).keys()];
+  return shuffle(avatarAdresses);
 };
 
 const getArrayRandElement = function (arr) {
@@ -49,7 +46,7 @@ const getRandomNumber = function (max, min = 0) {
   return `Ошибка. Установите максимальное число для генератора, и, опционально, минимальное число`;
 };
 
-const getRandomAddress = function () {
+const getRandomAddresses = function () {
   const widthmapX = map.offsetWidth;
   const minmapY = 130;
   const maxmapY = 630;
@@ -69,7 +66,7 @@ const getRandomSubArray = function (arr) {
 };
 
 const generationNearObject = function (avatarAdress, coordinateX, coordinateY) {
-  const NearObject = {
+  const nearObject = {
     author: {
       avatar: `img/avatars/user0${avatarAdress}.png`
     },
@@ -91,15 +88,15 @@ const generationNearObject = function (avatarAdress, coordinateX, coordinateY) {
       y: coordinateY
     }
   };
-  return NearObject;
+  return nearObject;
 };
 
 const getNearObjects = function (quantityNearObject) {
-  const avatarAdress = getAvatarAdress(quantityNearObject);
+  const avatarAdresses = getAvatarAdresses(quantityNearObject);
   let nearObjectsElements = [];
   for (let i = 0; i < quantityNearObject; i++) {
-    const coordinate = getRandomAddress();
-    nearObjectsElements.push(generationNearObject(avatarAdress[i], coordinate.x, coordinate.y));
+    const coordinate = getRandomAddresses();
+    nearObjectsElements.push(generationNearObject(avatarAdresses[i], coordinate.x, coordinate.y));
   }
   return nearObjectsElements;
 };
@@ -124,7 +121,7 @@ const getGenerationMark = function (nearObject, MarkWidth, MarkHeight) {
   return newMark;
 };
 
-const createDOM = function (quantityNearObject) {
+const renderNearObjects = function (quantityNearObject) {
   const sizesMark = getRulerMarkSize();
   const nearObjects = getNearObjects(quantityNearObject);
   const fragment = document.createDocumentFragment();
@@ -135,5 +132,5 @@ const createDOM = function (quantityNearObject) {
 };
 
 map.classList.remove(`map--faded`);
-createDOM(QUANITY_NEAR_OBJECT);
+renderNearObjects(QUANITY_NEAR_OBJECT);
 
